@@ -19,16 +19,20 @@ stages:
         versionSpec: '16.x'
       displayName: 'Install Node.js'
 
+    # Frontend Build
     - script: |
         cd react-client
         npm install
         npm run build
       displayName: 'Install and Build Frontend'
 
+    # Backend Build (Optional)
     - script: |
+        cd backend
         npm install
       displayName: 'Install Backend Dependencies'
 
+    # Archive Code
     - task: ArchiveFiles@2
       inputs:
         rootFolderOrFile: '$(System.DefaultWorkingDirectory)/'
@@ -43,6 +47,7 @@ stages:
         verbose: true
       displayName: 'Archive Code'
 
+    # Publish Artifact
     - task: PublishBuildArtifacts@1
       inputs:
         artifactName: 'combined'
@@ -54,13 +59,16 @@ stages:
   - job: Test_Job
     displayName: 'Test Job'
     steps:
+    # Frontend Tests
     - script: |
         cd react-client
         npm install
         npm test
       displayName: 'Run Frontend Tests'
 
+    # Backend Tests (Optional)
     - script: |
+        cd backend
         npm install
         npm test
       displayName: 'Run Backend Tests'
