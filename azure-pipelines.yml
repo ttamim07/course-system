@@ -1,4 +1,9 @@
 trigger:
+- task: NodeTool@0
+  inputs:
+    versionSource: 'spec'
+    versionSpec: '6.x'
+    checkLatest: true
   branches:
     include:
       - main  # Trigger pipeline for changes in the main branch
