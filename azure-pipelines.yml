@@ -1,48 +1,66 @@
+# Node.js with React and Express Build Pipeline
+
 trigger:
   branches:
     include:
-      - main  # Trigger pipeline for changes in the main branch
+      - main
 
 pool:
-  name: Default  # Use the default agent pool with your self-hosted agent
-
-variables:
-  buildConfiguration: 'Release'
+  name: Default 
 
 stages:
-# Build Stage
 - stage: Build
-  displayName: "Build Stage"
   jobs:
-  - job: BuildJob
-    displayName: "Compile and Build the Project"
+  - job: Build_Job
+    displayName: 'Build Job'
     steps:
     - task: NodeTool@0
       inputs:
         versionSpec: '16.x'
-        checkLatest: true
-      displayName: "Install Node.js"
+      displayName: 'Install Node.js'
 
     - script: |
-        echo "Installing dependencies..."
+        cd react-client
         npm install
-      displayName: "Install Dependencies"
+        npm run build
+      displayName: 'Install and Build Frontend'
 
     - script: |
-        echo "Building the project..."
-        npm run build
-      displayName: "Build the Project"
+        npm install
+      displayName: 'Install Backend Dependencies'
 
-# Test Stage
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        replaceExistingArchive: true
+        exclude: |
+          node_modules/**
+          frontend/node_modules/**
+          frontend/build/**
+        verbose: true
+      displayName: 'Archive Code'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        artifactName: 'combined'
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+      displayName: 'Publish Combined Artifact'
+
 - stage: Test
-  displayName: "Test Stage"
-  dependsOn: Build
   jobs:
-  - job: TestJob
-    displayName: "Run Unit Tests and Generate Coverage Report"
+  - job: Test_Job
+    displayName: 'Test Job'
     steps:
     - script: |
-        echo "Running unit tests..."
-        npm test -- --coverage
-      displayName: "Run Tests and Generate Code Coverage"
+        cd react-client
+        npm install
+        npm test
+      displayName: 'Run Frontend Tests'
 
+    - script: |
+        npm install
+        npm test
+      displayName: 'Run Backend Tests'
