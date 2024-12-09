@@ -31,8 +31,8 @@ stages:
     # Build Backend
     - script: |
         cd $(System.DefaultWorkingDirectory)/backend
-        npm install
-      displayName: 'Install Backend Dependencies'
+        npm install --legacy-peer-deps
+      displayName: 'Install Backend Dependencies (With Peer Conflict Fix)'
 
     # Archive Code
     - task: ArchiveFiles@2
@@ -74,6 +74,6 @@ stages:
     # Backend Tests
     - script: |
         cd $(System.DefaultWorkingDirectory)/backend
-        npm install
+        npm install --legacy-peer-deps
         npm test
       displayName: 'Run Backend Tests'
