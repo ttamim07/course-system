@@ -9,33 +9,35 @@ pool:
   name: Default 
 
 stages:
+# Build Stage
 - stage: Build
+  displayName: "Build Stage"
   jobs:
   - job: Build_Job
-    displayName: 'Build Job'
+    displayName: "Build Frontend and Backend"
     steps:
     - task: NodeTool@0
       inputs:
         versionSpec: '16.x'
       displayName: 'Install Node.js'
 
-    # Frontend Build
+    # Build Frontend
     - script: |
-        cd react-client
+        cd $(System.DefaultWorkingDirectory)/frontend
         npm install
         npm run build
       displayName: 'Install and Build Frontend'
 
-    # Backend Build (Optional)
+    # Build Backend
     - script: |
-        cd backend
+        cd $(System.DefaultWorkingDirectory)/backend
         npm install
       displayName: 'Install Backend Dependencies'
 
     # Archive Code
     - task: ArchiveFiles@2
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/'
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
         includeRootFolder: false
         archiveType: 'zip'
         archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
@@ -47,28 +49,31 @@ stages:
         verbose: true
       displayName: 'Archive Code'
 
-    # Publish Artifact
+    # Publish Build Artifact
     - task: PublishBuildArtifacts@1
       inputs:
-        artifactName: 'combined'
-        pathToPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-      displayName: 'Publish Combined Artifact'
+        artifactName: 'BuildArtifact'
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      displayName: 'Publish Build Artifact'
 
+# Test Stage
 - stage: Test
+  displayName: "Test Stage"
+  dependsOn: Build
   jobs:
   - job: Test_Job
-    displayName: 'Test Job'
+    displayName: "Run Frontend and Backend Tests"
     steps:
     # Frontend Tests
     - script: |
-        cd react-client
+        cd $(System.DefaultWorkingDirectory)/frontend
         npm install
         npm test
       displayName: 'Run Frontend Tests'
 
-    # Backend Tests (Optional)
+    # Backend Tests
     - script: |
-        cd backend
+        cd $(System.DefaultWorkingDirectory)/backend
         npm install
         npm test
       displayName: 'Run Backend Tests'
