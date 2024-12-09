@@ -1,0 +1,65 @@
+trigger:
+  branches:
+    include:
+      - main  # Trigger pipeline for changes in the main branch
+
+pool:
+  name: Default  # Use the default agent pool with your self-hosted agent
+
+variables:
+  buildConfiguration: 'Release'
+
+stages:
+# Build Stage
+- stage: Build
+  displayName: "Build Stage"
+  jobs:
+  - job: BuildJob
+    displayName: "Compile and Build the Project"
+    steps:
+    - task: UseNode@2
+      inputs:
+        version: '16.x'
+
+    - script: |
+        echo "Installing dependencies..."
+        npm install
+      displayName: "Install Dependencies"
+
+    - script: |
+        echo "Building the project..."
+        npm run build
+      displayName: "Build the Project"
+
+# Test Stage
+- stage: Test
+  displayName: "Test Stage"
+  dependsOn: Build
+  jobs:
+  - job: TestJob
+    displayName: "Run Unit Tests and Generate Coverage Report"
+    steps:
+    - script: |
+        echo "Running unit tests..."
+        npm test -- --coverage
+      displayName: "Run Tests and Generate Code Coverage"
+
+# Analyze Stage
+- stage: Analyze
+  displayName: "Code Analysis with SonarQube"
+  dependsOn: Test
+  jobs:
+  - job: CodeAnalysisJob
+    displayName: "Run Static Code Analysis"
+    steps:
+    - task: SonarQubePrepare@4
+      inputs:
+        SonarQube: 'SonarQubeServiceConnection'  # Replace with your service connection name
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: 'your_project_key'
+        cliProjectName: 'your_project_name'
+
+    - script: |
+        sonar-scanner
+      displayName: "Run SonarQube Analysis"
