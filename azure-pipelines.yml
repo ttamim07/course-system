@@ -1,9 +1,4 @@
 trigger:
-- task: NodeTool@0
-  inputs:
-    versionSource: 'spec'
-    versionSpec: '6.x'
-    checkLatest: true
   branches:
     include:
       - main  # Trigger pipeline for changes in the main branch
@@ -22,9 +17,11 @@ stages:
   - job: BuildJob
     displayName: "Compile and Build the Project"
     steps:
-    - task: UseNode@2
+    - task: NodeTool@0
       inputs:
-        version: '16.x'
+        versionSpec: '16.x'
+        checkLatest: true
+      displayName: "Install Node.js"
 
     - script: |
         echo "Installing dependencies..."
@@ -49,22 +46,3 @@ stages:
         npm test -- --coverage
       displayName: "Run Tests and Generate Code Coverage"
 
-# Analyze Stage
-- stage: Analyze
-  displayName: "Code Analysis with SonarQube"
-  dependsOn: Test
-  jobs:
-  - job: CodeAnalysisJob
-    displayName: "Run Static Code Analysis"
-    steps:
-    - task: SonarQubePrepare@4
-      inputs:
-        SonarQube: 'SonarQubeServiceConnection'  # Replace with your service connection name
-        scannerMode: 'CLI'
-        configMode: 'manual'
-        cliProjectKey: 'your_project_key'
-        cliProjectName: 'your_project_name'
-
-    - script: |
-        sonar-scanner
-      displayName: "Run SonarQube Analysis"
