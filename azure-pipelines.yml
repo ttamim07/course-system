@@ -1,12 +1,10 @@
-# Node.js with React and Express Build Pipeline
-
 trigger:
   branches:
     include:
       - main
 
 pool:
-  name: Default 
+  name: Default  # Use your self-hosted agent pool
 
 stages:
 # Build Stage
@@ -16,6 +14,7 @@ stages:
   - job: Build_Job
     displayName: "Build Frontend and Backend"
     steps:
+    # Install Node.js
     - task: NodeTool@0
       inputs:
         versionSpec: '16.x'
@@ -32,29 +31,8 @@ stages:
     - script: |
         cd $(System.DefaultWorkingDirectory)/backend
         npm install --legacy-peer-deps
-      displayName: 'Install Backend Dependencies (With Peer Conflict Fix)'
-
-    # Archive Code
-    - task: ArchiveFiles@2
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
-        includeRootFolder: false
-        archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-        replaceExistingArchive: true
-        exclude: |
-          node_modules/**
-          frontend/node_modules/**
-          frontend/build/**
-        verbose: true
-      displayName: 'Archive Code'
-
-    # Publish Build Artifact
-    - task: PublishBuildArtifacts@1
-      inputs:
-        artifactName: 'BuildArtifact'
-        pathToPublish: '$(Build.ArtifactStagingDirectory)'
-      displayName: 'Publish Build Artifact'
+        npm run build
+      displayName: 'Install and Build Backend'
 
 # Test Stage
 - stage: Test
@@ -68,12 +46,12 @@ stages:
     - script: |
         cd $(System.DefaultWorkingDirectory)/frontend
         npm install
-        npm test
-      displayName: 'Run Frontend Tests'
+        npm test -- --coverage
+      displayName: 'Run Frontend Tests and Generate Coverage'
 
     # Backend Tests
     - script: |
         cd $(System.DefaultWorkingDirectory)/backend
         npm install --legacy-peer-deps
-        npm test
-      displayName: 'Run Backend Tests'
+        npm test -- --coverage
+      displayName: 'Run Backend Tests and Generate Coverage'
