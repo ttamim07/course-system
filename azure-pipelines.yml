@@ -34,20 +34,7 @@ stages:
         npm install --legacy-peer-deps
       displayName: 'Install Backend Dependencies (With Peer Conflict Fix)'
 
-    # Archive Code
-    - task: ArchiveFiles@2
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
-        includeRootFolder: false
-        archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-        replaceExistingArchive: true
-        exclude: |
-          node_modules/**
-          frontend/node_modules/**
-          frontend/build/**
-        verbose: true
-      displayName: 'Archive Code'
+ 
 
     # Publish Build Artifact
     - task: PublishBuildArtifacts@1
